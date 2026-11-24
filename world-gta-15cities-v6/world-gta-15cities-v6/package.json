@@ -1,0 +1,13 @@
+{
+  "name": "world-gta-15cities-v6",
+  "version": "6.0.0",
+  "description": "15 Countries & 15 Cities Complete Open-World GTA, Missions, Garage, Radio, AI & Multiplayer RPG (V6 Ultimate)",
+  "scripts": {
+    "merge": "node merge_cities.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "ws": "^8.17.0"
+  }
+}

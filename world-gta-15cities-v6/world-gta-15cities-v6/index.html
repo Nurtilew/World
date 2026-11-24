@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>15 Countries & 15 Cities — Open World V6 (Ultimate)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', system-ui, sans-serif; }
+  body { overflow: hidden; background: #04070d; color: #f8fafc; }
+  #hud {
+    position: fixed; top: 12px; left: 12px; z-index: 10;
+    background: rgba(8, 12, 22, 0.84); backdrop-filter: blur(12px);
+    padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.16);
+    width: 315px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  }
+  #city-title { font-size: 14px; font-weight: 800; color: #38bdf8; margin-bottom: 3px; }
+  #mode-badge { font-size: 11px; color: #94a3b8; margin-bottom: 6px; }
+  #mission-box {
+    font-size: 11px; color: #fde68a; background: rgba(245, 158, 11, 0.14);
+    border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; padding: 6px 8px; margin-bottom: 6px;
+  }
+  .bar-wrap { margin: 5px 0; }
+  .bar-label { font-size: 11px; display: flex; justify-content: space-between; margin-bottom: 2px; color: #cbd5e1; }
+  .bar { height: 6px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; transition: width 0.15s; }
+  #hp-fill { background: linear-gradient(90deg, #ef4444, #f87171); width: 100%; }
+  #armor-fill { background: linear-gradient(90deg, #3b82f6, #60a5fa); width: 50%; }
+  #food-fill { background: linear-gradient(90deg, #f59e0b, #fbbf24); width: 100%; }
+  #stam-fill { background: linear-gradient(90deg, #10b981, #34d399); width: 100%; }
+  #stats-row { font-size: 12px; margin-top: 7px; display: flex; gap: 9px; flex-wrap: wrap; font-weight: 600; }
+  #minimap-box {
+    position: fixed; bottom: 14px; left: 14px; z-index: 12;
+    border: 2px solid rgba(56, 189, 248, 0.6); border-radius: 12px; overflow: hidden;
+    background: #070d19; box-shadow: 0 6px 20px rgba(0,0,0,0.7);
+  }
+  #controls-panel {
+    position: fixed; top: 12px; right: 12px; z-index: 10;
+    display: flex; flex-direction: column; gap: 4px; width: 250px;
+    max-height: 84vh; overflow-y: auto;
+  }
+  button, select, input {
+    background: rgba(15, 23, 42, 0.88); color: #f8fafc; border: 1px solid rgba(255,255,255,0.18);
+    padding: 6px 9px; border-radius: 8px; cursor: pointer; font-size: 11.5px; font-weight: 600;
+    text-align: left;
+  }
+  button:hover { background: rgba(56, 189, 248, 0.25); border-color: #38bdf8; }
+  #crosshair {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 16px; height: 16px; border: 2px solid rgba(56, 189, 248, 0.9); border-radius: 50%;
+    pointer-events: none; z-index: 9;
+  }
+  #log {
+    position: fixed; bottom: 175px; left: 14px; z-index: 10;
+    font-size: 12px; color: #bae6fd; background: rgba(8,12,22,0.82);
+    padding: 6px 12px; border-radius: 8px; pointer-events: none; max-width: 500px;
+  }
+  #chat-box {
+    position: fixed; bottom: 14px; right: 14px; z-index: 14;
+    display: flex; gap: 5px; width: 255px;
+  }
+  #chat-input { flex: 1; user-select: text; cursor: text; }
+  #mobile-controls {
+    position: fixed; bottom: 60px; left: 175px; right: 280px; z-index: 15;
+    display: flex; justify-content: space-between; pointer-events: none;
+  }
+  .pad { display: grid; grid-template-columns: repeat(3, 42px); gap: 4px; pointer-events: auto; }
+  .pad button { height: 42px; font-size: 14px; text-align: center; background: rgba(255,255,255,0.14); }
+  .actions { display: flex; gap: 6px; align-items: flex-end; pointer-events: auto; }
+  .actions button { padding: 10px 12px; font-size: 12px; text-align: center; background: rgba(56, 189, 248, 0.24); }
+</style>
+</head>
+<body>
+
+<div id="hud">
+  <div id="city-title">Алматы (Қазақстан)</div>
+  <div id="mode-badge">Режим: WALK | Уақыт: 14:00 | Онлайн: 1</div>
+  <div id="mission-box">Белсенді миссия жоқ (Төменнен таңдап бастаңыз)</div>
+  <div class="bar-wrap">
+    <div class="bar-label"><span>HP (Денсаулық)</span><span id="hp-txt">100</span></div>
+    <div class="bar"><div id="hp-fill" class="bar-fill"></div></div>
+  </div>
+  <div class="bar-wrap">
+    <div class="bar-label"><span>Бронь (Armor)</span><span id="armor-txt">50</span></div>
+    <div class="bar"><div id="armor-fill" class="bar-fill"></div></div>
+  </div>
+  <div class="bar-wrap">
+    <div class="bar-label"><span>Тамақ (Тоқтық)</span><span id="food-txt">100</span></div>
+    <div class="bar"><div id="food-fill" class="bar-fill"></div></div>
+  </div>
+  <div class="bar-wrap">
+    <div class="bar-label"><span>Энергия (Stamina)</span><span id="stam-txt">100</span></div>
+    <div class="bar"><div id="stam-fill" class="bar-fill"></div></div>
+  </div>
+  <div id="stats-row">
+    <span>💰 $<span id="money">5000</span></span>
+    <span>⭐ <span id="wanted">0</span></span>
+    <span>🧠 <span id="intellect">10</span></span>
+    <span>🏢 <span id="biz">0</span></span>
+    <span>🔫 <span id="weapon-name">Тапанша</span></span>
+  </div>
+</div>
+
+<div id="minimap-box">
+  <canvas id="minimap" width="150" height="150"></canvas>
+</div>
+
+<div id="controls-panel">
+  <select id="city-select"></select>
+  <select id="mission-select"></select>
+  <button onclick="startMission()">🎯 Миссияны бастау</button>
+  <select id="garage-select"></select>
+  <button onclick="buyOrSelectCar()">🏎️ Гараж: Сатып алу / Міну</button>
+  <select id="radio-select" onchange="changeRadio()"></select>
+  <button onclick="setMode('walk')">🚶 Жаяу (First-Person)</button>
+  <button onclick="setMode('car')">🚗 Спорткар (3D модель + G)</button>
+  <button onclick="setMode('boat')">🚤 Катер / Яхта (Мұхит)</button>
+  <button onclick="setMode('plane')">✈️ Реактивті ұшақ</button>
+  <button onclick="setMode('space')">🚀 Ғарышкер (Орбита / Ай)</button>
+  <button onclick="toggleHome()">🏠 Үйге кіру / Шығу</button>
+  <button onclick="toggleTime()">🌗 Күн / Түн ауыстыру</button>
+  <button onclick="toggleWeather()">🌧️ Жаңбыр / Ашық аспан</button>
+  <button onclick="eatFood()">🍔 Тамақ жеу (-$50)</button>
+  <button onclick="buyArmor()">🛡️ Бронежилет алу (-$300)</button>
+  <button onclick="doWork()">💼 Офис жұмысы (+$600+)</button>
+  <button onclick="doTaxi()">🚕 Такси / Жеткізу (+$450)</button>
+  <button onclick="doStudy()">🎓 Университет (+15 🧠)</button>
+  <button onclick="buyBusiness()">🏢 Бизнес сатып алу ($4000)</button>
+  <button onclick="doHeist()">💰 Банк тонау (+$3500, +2⭐)</button>
+  <button onclick="doRescue()">🚑 Құтқару миссиясы (+$1800)</button>
+  <button onclick="saveGame()">💾 Прогресті сақтау (Save)</button>
+</div>
+
+<div id="crosshair"></div>
+<div id="log">WASD — жүру | G — көлік/катерге отыру | E — ғимарат | F/ЛКМ — ату | 1-4 — қару | Shift — жүгіру</div>
+
+<div id="mobile-controls">
+  <div class="pad">
+    <div></div><button ontouchstart="keys['KeyW']=true" ontouchend="keys['KeyW']=false">▲</button><div></div>
+    <button ontouchstart="keys['KeyA']=true" ontouchend="keys['KeyA']=false">◀</button>
+    <button ontouchstart="keys['KeyS']=true" ontouchend="keys['KeyS']=false">▼</button>
+    <button ontouchstart="keys['KeyD']=true" ontouchend="keys['KeyD']=false">▶</button>
+  </div>
+  <div class="actions">
+    <button onclick="shootOrFight()">🔫 Ату</button>
+    <button ontouchstart="keys['Space']=true" ontouchend="keys['Space']=false">⬆</button>
+    <button onclick="rotateMobile(-0.25)">↺</button>
+    <button onclick="rotateMobile(0.25)">↻</button>
+  </div>
+</div>
+
+<div id="chat-box">
+  <input id="chat-input" type="text" placeholder="Серверлік чат..." onkeydown="if(event.key==='Enter') sendChat()" />
+  <button onclick="sendChat()">Жіберу</button>
+</div>
+
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+<script type="module" src="./src/game.js"></script>
+</body>
+</html>
